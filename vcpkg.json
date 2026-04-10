@@ -1,0 +1,21 @@
+{
+  "name": "cpp-playground",
+  "version": "1.0.1",
+  "builtin-baseline": "e0edebd1dc2d03cf7d02349df91de74ef4d0c00e",
+  "dependencies": [
+    {
+      "name": "arrow",
+      "features": [
+        "compute"
+      ]
+    },
+    "boost-accumulators",
+    "boost-asio",
+    "boost-bind",
+    "boost-headers",
+    "boost-json",
+    "boost-log",
+    "boost-program-options",
+    "gtest"
+  ]
+}

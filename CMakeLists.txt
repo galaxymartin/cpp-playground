@@ -20,21 +20,29 @@ else()
   add_link_options(-Wl,--gc-sections -Wl,--strip-all -fopenmp)
 endif()
 
-find_package(GTest REQUIRED CONFIG)
+find_package(GTest CONFIG QUIET)
+if (NOT GTest_FOUND)
+  include(FetchContent)
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/release-1.12.1.zip
+  )
+  FetchContent_MakeAvailable(googletest)
+endif()
 find_package(Threads REQUIRED)
-find_package(Arrow REQUIRED CONFIG)
-find_package(ArrowCompute CONFIG REQUIRED)
-find_package(Parquet REQUIRED CONFIG)
-find_package(boost_json REQUIRED CONFIG)
-find_package(boost_asio REQUIRED CONFIG)
-find_package(boost_program_options REQUIRED CONFIG)
-find_package(boost_headers REQUIRED CONFIG)
-find_package(boost_bind REQUIRED CONFIG)
-find_package(boost_log REQUIRED CONFIG)
+find_package(Arrow CONFIG QUIET)
+find_package(ArrowCompute CONFIG QUIET)
+find_package(Parquet CONFIG QUIET)
+find_package(boost_json CONFIG QUIET)
+find_package(boost_asio CONFIG QUIET)
+find_package(boost_program_options CONFIG QUIET)
+find_package(boost_headers CONFIG QUIET)
+find_package(boost_bind CONFIG QUIET)
+find_package(boost_log CONFIG QUIET)
 find_package(PkgConfig)
 
 include(GoogleTest)
-add_executable(tests test.cpp matrix.cpp)
+add_executable(tests test.cpp matrix.cpp simd/avx512/matrix_avx512.cpp simd/sse41/matrix_sse41.cpp)
 target_link_libraries(tests PRIVATE
     GTest::gtest_main
     GTest::gmock_main
@@ -42,22 +50,21 @@ target_link_libraries(tests PRIVATE
 
 gtest_discover_tests(tests)
 
-add_executable(cpp-playground main.cpp my_class.cpp printer.cpp matrix.cpp)
-add_executable(arrow_demo arrow_main.cpp)
-target_link_libraries(cpp-playground PRIVATE 
-    Boost::json 
-    Boost::headers
-    Boost::asio
-    Boost::bind
-    Boost::log
-)
+add_executable(cpp-playground main.cpp my_class.cpp printer.cpp matrix.cpp simd/avx512/matrix_avx512.cpp simd/sse41/matrix_sse41.cpp)
 
-target_link_libraries(arrow_demo PRIVATE
-    "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Arrow::arrow_static,Arrow::arrow_shared>"
-    "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,ArrowCompute::arrow_compute_static,ArrowCompute::arrow_compute_shared>"
-    "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Parquet::parquet_static,Parquet::parquet_shared>"
-    Boost::program_options
-)
+# Note: linking to Boost targets removed to allow building tests without external Boost
+
+if (Arrow_FOUND)
+  add_executable(arrow_demo arrow_main.cpp)
+  target_link_libraries(arrow_demo PRIVATE
+      "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Arrow::arrow_static,Arrow::arrow_shared>"
+      "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,ArrowCompute::arrow_compute_static,ArrowCompute::arrow_compute_shared>"
+      "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Parquet::parquet_static,Parquet::parquet_shared>"
+      Boost::program_options
+  )
+else()
+  message(STATUS "Arrow not found; skipping arrow_demo target")
+endif()
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

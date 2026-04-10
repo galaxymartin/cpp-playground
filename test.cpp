@@ -14,42 +14,10 @@ using ::testing::Return;
 // Helper function to fill matrix using AVX512
 template<typename T>
 void fillMatrixAVX512(Matrix<T>& mat, int mod, T factor) {
-    size_t total = mat.rows() * mat.cols();
-    if constexpr (std::is_same_v<T, float>) {
-        for (size_t i = 0; i < total; i += 16) {
-            size_t block = std::min(16UL, total - i);
-            if (block == 16) {
-                __m512 val;
-                float vals[16];
-                for (int j = 0; j < 16; ++j) {
-                    vals[j] = static_cast<float>((i + j) % mod) * factor;
-                }
-                val = _mm512_loadu_ps(vals);
-                _mm512_storeu_ps(&mat.m_data[i], val);
-            } else {
-                for (size_t j = 0; j < block; ++j) {
-                    mat.m_data[i + j] = static_cast<T>((i + j) % mod) * factor;
-                }
-            }
-        }
-    } else if constexpr (std::is_same_v<T, double>) {
-        for (size_t i = 0; i < total; i += 8) {
-            size_t block = std::min(8UL, total - i);
-            if (block == 8) {
-                __m512d val;
-                double vals[8];
-                for (int j = 0; j < 8; ++j) {
-                    vals[j] = static_cast<double>((i + j) % mod) * factor;
-                }
-                val = _mm512_loadu_pd(vals);
-                _mm512_storeu_pd(&mat.m_data[i], val);
-            } else {
-                for (size_t j = 0; j < block; ++j) {
-                    mat.m_data[i + j] = static_cast<T>((i + j) % mod) * factor;
-                }
-            }
-        }
-    }
+  size_t total = mat.rows() * mat.cols();
+  for (size_t i = 0; i < total; ++i) {
+    mat.m_data[i] = static_cast<T>((i % mod)) * factor;
+  }
 }
 
 // Demonstrate some basic assertions.

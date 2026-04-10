@@ -42,15 +42,28 @@ find_package(boost_log CONFIG QUIET)
 find_package(PkgConfig)
 
 include(GoogleTest)
-add_executable(tests test.cpp matrix.cpp simd/avx512/matrix_avx512.cpp simd/sse41/matrix_sse41.cpp)
+add_library(simd STATIC
+  simd/avx512/matrix_avx512.cpp
+  simd/sse41/matrix_sse41.cpp
+  simd/dispatch.cpp
+)
+target_include_directories(simd PUBLIC
+  ${CMAKE_SOURCE_DIR}/simd/avx512
+  ${CMAKE_SOURCE_DIR}/simd/sse41
+  ${CMAKE_SOURCE_DIR}/simd
+)
+
+add_executable(tests test.cpp matrix.cpp)
 target_link_libraries(tests PRIVATE
+    simd
     GTest::gtest_main
     GTest::gmock_main
 )
 
 gtest_discover_tests(tests)
 
-add_executable(cpp-playground main.cpp my_class.cpp printer.cpp matrix.cpp simd/avx512/matrix_avx512.cpp simd/sse41/matrix_sse41.cpp)
+add_executable(cpp-playground main.cpp my_class.cpp printer.cpp matrix.cpp)
+target_link_libraries(cpp-playground PRIVATE simd)
 
 # Note: linking to Boost targets removed to allow building tests without external Boost
 

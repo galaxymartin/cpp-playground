@@ -1,15 +1,7 @@
 #include "matrix.hpp"
 #include <type_traits>
 
-// Helper function to check AVX-512 support
-static bool has_avx512() {
-    return __builtin_cpu_supports("avx512f") && __builtin_cpu_supports("avx512dq");
-}
-
-// Helper function to check SSE4.2 support
-static bool has_sse42() {
-    return __builtin_cpu_supports("sse4.2");
-}
+#include "simd/dispatch.hpp"
 
 // Template implementation
 template<typename T>
@@ -39,9 +31,7 @@ T& Matrix<T>::at(size_t i, size_t j) { return m_data[i * m_cols + j]; }
 template<typename T>
 const T& Matrix<T>::at(size_t i, size_t j) const { return m_data[i * m_cols + j]; }
 
-#include "simd/avx512/matrix_avx512.hpp"
-#include "simd/sse41/matrix_sse41.hpp"
-// Unified multiply function for float and double using AVX-512 if available, SSE4.2 as fallback
+// Unified multiply function for float and double using runtime SIMD dispatch
 template<typename T>
 Matrix<T> Matrix<T>::multiply(const Matrix<T>& a, const Matrix<T>& b) {
     if (a.cols() != b.rows()) throw std::invalid_argument("Matrix dimensions don't match");
@@ -54,26 +44,18 @@ Matrix<T> Matrix<T>::multiply(const Matrix<T>& a, const Matrix<T>& b) {
             if constexpr (std::is_same_v<T, float>) {
                 if (Matrix<T>::s_force_scalar_multiply) {
                     for (size_t p = 0; p < k; ++p) sum += a.m_data[i * k + p] * b.m_data[p * n + j];
-                } else if (Matrix<T>::s_force_sse42_multiply && has_sse42()) {
-                    sum = sse_dot_float(&a.m_data[i * k], &b.m_data[0], k, n, j);
-                } else if (has_avx512()) {
-                    sum = avx512_dot_float(&a.m_data[i * k], &b.m_data[0], k, n, j);
-                } else if (has_sse42()) {
-                    sum = sse_dot_float(&a.m_data[i * k], &b.m_data[0], k, n, j);
+                } else if (Matrix<T>::s_force_sse42_multiply) {
+                    sum = simd_dot_float(&a.m_data[i * k], &b.m_data[0], k, n, j, SimdLevel::SSE42);
                 } else {
-                    for (size_t p = 0; p < k; ++p) sum += a.m_data[i * k + p] * b.m_data[p * n + j];
+                    sum = simd_dot_float(&a.m_data[i * k], &b.m_data[0], k, n, j, SimdLevel::AUTO);
                 }
             } else if constexpr (std::is_same_v<T, double>) {
                 if (Matrix<T>::s_force_scalar_multiply) {
                     for (size_t p = 0; p < k; ++p) sum += a.m_data[i * k + p] * b.m_data[p * n + j];
-                } else if (Matrix<T>::s_force_sse42_multiply && has_sse42()) {
-                    sum = sse_dot_double(&a.m_data[i * k], &b.m_data[0], k, n, j);
-                } else if (has_avx512()) {
-                    sum = avx512_dot_double(&a.m_data[i * k], &b.m_data[0], k, n, j);
-                } else if (has_sse42()) {
-                    sum = sse_dot_double(&a.m_data[i * k], &b.m_data[0], k, n, j);
+                } else if (Matrix<T>::s_force_sse42_multiply) {
+                    sum = simd_dot_double(&a.m_data[i * k], &b.m_data[0], k, n, j, SimdLevel::SSE42);
                 } else {
-                    for (size_t p = 0; p < k; ++p) sum += a.m_data[i * k + p] * b.m_data[p * n + j];
+                    sum = simd_dot_double(&a.m_data[i * k], &b.m_data[0], k, n, j, SimdLevel::AUTO);
                 }
             } else {
                 // Fallback for other types
@@ -100,29 +82,19 @@ Matrix<T> Matrix<T>::add(const Matrix<T>& a, const Matrix<T>& b) {
         if (Matrix<T>::s_force_scalar_add) {
             #pragma omp parallel for
             for (size_t i = 0; i < total; ++i) c.m_data[i] = a.m_data[i] + b.m_data[i];
-        } else if (Matrix<T>::s_force_sse42_add && has_sse42()) {
-            sse_add_float(&a.m_data[0], &b.m_data[0], &c.m_data[0], total);
-        } else if (has_avx512()) {
-            avx512_add_float(&a.m_data[0], &b.m_data[0], &c.m_data[0], total);
-        } else if (has_sse42()) {
-            sse_add_float(&a.m_data[0], &b.m_data[0], &c.m_data[0], total);
+        } else if (Matrix<T>::s_force_sse42_add) {
+            simd_add_float(&a.m_data[0], &b.m_data[0], &c.m_data[0], total, SimdLevel::SSE42);
         } else {
-            #pragma omp parallel for
-            for (size_t i = 0; i < total; ++i) c.m_data[i] = a.m_data[i] + b.m_data[i];
+            simd_add_float(&a.m_data[0], &b.m_data[0], &c.m_data[0], total, SimdLevel::AUTO);
         }
     } else if constexpr (std::is_same_v<T, double>) {
         if (Matrix<T>::s_force_scalar_add) {
             #pragma omp parallel for
             for (size_t i = 0; i < total; ++i) c.m_data[i] = a.m_data[i] + b.m_data[i];
-        } else if (Matrix<T>::s_force_sse42_add && has_sse42()) {
-            sse_add_double(&a.m_data[0], &b.m_data[0], &c.m_data[0], total);
-        } else if (has_avx512()) {
-            avx512_add_double(&a.m_data[0], &b.m_data[0], &c.m_data[0], total);
-        } else if (has_sse42()) {
-            sse_add_double(&a.m_data[0], &b.m_data[0], &c.m_data[0], total);
+        } else if (Matrix<T>::s_force_sse42_add) {
+            simd_add_double(&a.m_data[0], &b.m_data[0], &c.m_data[0], total, SimdLevel::SSE42);
         } else {
-            #pragma omp parallel for
-            for (size_t i = 0; i < total; ++i) c.m_data[i] = a.m_data[i] + b.m_data[i];
+            simd_add_double(&a.m_data[0], &b.m_data[0], &c.m_data[0], total, SimdLevel::AUTO);
         }
     } else {
         // Fallback for other types

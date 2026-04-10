@@ -12,6 +12,8 @@ private:
     static inline bool s_force_sse42_multiply = false;
     static inline bool s_force_scalar_add = false;
     static inline bool s_force_sse42_add = false;
+    static inline bool s_force_scalar_sub = false;
+    static inline bool s_force_sse42_sub = false;
     
 public:
     Matrix(size_t rows, size_t cols);
@@ -22,11 +24,14 @@ public:
     const T& at(size_t i, size_t j) const;
     static Matrix multiply(const Matrix& a, const Matrix& b);
     static Matrix add(const Matrix& a, const Matrix& b);
+    static Matrix sub(const Matrix& a, const Matrix& b);
     
     static void setForceScalarMultiply(bool force) { s_force_scalar_multiply = force; }
     static void setForceSSE42Multiply(bool force) { s_force_sse42_multiply = force; }
     static void setForceScalarAdd(bool force) { s_force_scalar_add = force; }
     static void setForceSSE42Add(bool force) { s_force_sse42_add = force; }
+    static void setForceScalarSub(bool force) { s_force_scalar_sub = force; }
+    static void setForceSSE42Sub(bool force) { s_force_sse42_sub = force; }
 
     size_t m_rows, m_cols;
     std::vector<T> m_data;
@@ -40,6 +45,11 @@ using MatrixD = Matrix<double>;
 template<typename T>
 Matrix<T> operator+(const Matrix<T>& a, const Matrix<T>& b) {
     return Matrix<T>::add(a, b);
+}
+
+template<typename T>
+Matrix<T> operator-(const Matrix<T>& a, const Matrix<T>& b) {
+    return Matrix<T>::sub(a, b);
 }
 
 template<typename T>

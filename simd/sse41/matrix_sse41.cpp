@@ -59,3 +59,31 @@ void sse_add_double(const double* a_data, const double* b_data, double* c_data, 
         }
     }
 }
+
+void sse_sub_float(const float* a_data, const float* b_data, float* c_data, size_t total) {
+    #pragma omp parallel for
+    for (size_t i = 0; i < total; i += 4) {
+        if (i + 4 <= total) {
+            __m128 va = _mm_loadu_ps(&a_data[i]);
+            __m128 vb = _mm_loadu_ps(&b_data[i]);
+            __m128 vc = _mm_sub_ps(va, vb);
+            _mm_storeu_ps(&c_data[i], vc);
+        } else {
+            for (size_t j = i; j < total; ++j) c_data[j] = a_data[j] - b_data[j];
+        }
+    }
+}
+
+void sse_sub_double(const double* a_data, const double* b_data, double* c_data, size_t total) {
+    #pragma omp parallel for
+    for (size_t i = 0; i < total; i += 2) {
+        if (i + 2 <= total) {
+            __m128d va = _mm_loadu_pd(&a_data[i]);
+            __m128d vb = _mm_loadu_pd(&b_data[i]);
+            __m128d vc = _mm_sub_pd(va, vb);
+            _mm_storeu_pd(&c_data[i], vc);
+        } else {
+            for (size_t j = i; j < total; ++j) c_data[j] = a_data[j] - b_data[j];
+        }
+    }
+}

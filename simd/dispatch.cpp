@@ -55,5 +55,19 @@ void simd_add_double(const double* a_data, const double* b_data, double* c_data,
     for (size_t i = 0; i < total; ++i) c_data[i] = a_data[i] + b_data[i];
 }
 
+void simd_sub_float(const float* a_data, const float* b_data, float* c_data, size_t total, SimdLevel force) {
+    SimdLevel lvl = (force == SimdLevel::AUTO) ? get_simd_level() : force;
+    if (lvl == SimdLevel::AVX512) { avx512_sub_float(a_data, b_data, c_data, total); return; }
+    if (lvl == SimdLevel::SSE42) { sse_sub_float(a_data, b_data, c_data, total); return; }
+    for (size_t i = 0; i < total; ++i) c_data[i] = a_data[i] - b_data[i];
+}
+
+void simd_sub_double(const double* a_data, const double* b_data, double* c_data, size_t total, SimdLevel force) {
+    SimdLevel lvl = (force == SimdLevel::AUTO) ? get_simd_level() : force;
+    if (lvl == SimdLevel::AVX512) { avx512_sub_double(a_data, b_data, c_data, total); return; }
+    if (lvl == SimdLevel::SSE42) { sse_sub_double(a_data, b_data, c_data, total); return; }
+    for (size_t i = 0; i < total; ++i) c_data[i] = a_data[i] - b_data[i];
+}
+
 // Ensure detection runs at startup
 struct SimdAutoInit { SimdAutoInit() { init_simd(); } } simdAutoInit;

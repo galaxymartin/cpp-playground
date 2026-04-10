@@ -106,11 +106,45 @@ Matrix<T> Matrix<T>::add(const Matrix<T>& a, const Matrix<T>& b) {
     return c;
 }
 
+template<typename T>
+Matrix<T> Matrix<T>::sub(const Matrix<T>& a, const Matrix<T>& b) {
+    if (a.rows() != b.rows() || a.cols() != b.cols()) {
+        throw std::invalid_argument("Matrix dimensions must match for subtraction");
+    }
+    size_t total = a.rows() * a.cols();
+    Matrix<T> c(a.rows(), a.cols());
+    if constexpr (std::is_same_v<T, float>) {
+        if (Matrix<T>::s_force_scalar_sub) {
+            #pragma omp parallel for
+            for (size_t i = 0; i < total; ++i) c.m_data[i] = a.m_data[i] - b.m_data[i];
+        } else if (Matrix<T>::s_force_sse42_sub) {
+            simd_sub_float(&a.m_data[0], &b.m_data[0], &c.m_data[0], total, SimdLevel::SSE42);
+        } else {
+            simd_sub_float(&a.m_data[0], &b.m_data[0], &c.m_data[0], total, SimdLevel::AUTO);
+        }
+    } else if constexpr (std::is_same_v<T, double>) {
+        if (Matrix<T>::s_force_scalar_sub) {
+            #pragma omp parallel for
+            for (size_t i = 0; i < total; ++i) c.m_data[i] = a.m_data[i] - b.m_data[i];
+        } else if (Matrix<T>::s_force_sse42_sub) {
+            simd_sub_double(&a.m_data[0], &b.m_data[0], &c.m_data[0], total, SimdLevel::SSE42);
+        } else {
+            simd_sub_double(&a.m_data[0], &b.m_data[0], &c.m_data[0], total, SimdLevel::AUTO);
+        }
+    } else {
+        #pragma omp parallel for
+        for (size_t i = 0; i < total; ++i) c.m_data[i] = a.m_data[i] - b.m_data[i];
+    }
+    return c;
+}
+
 // Explicit instantiations for multiply and add
 template Matrix<float> Matrix<float>::multiply(const Matrix<float>&, const Matrix<float>&);
 template Matrix<double> Matrix<double>::multiply(const Matrix<double>&, const Matrix<double>&);
 template Matrix<float> Matrix<float>::add(const Matrix<float>&, const Matrix<float>&);
 template Matrix<double> Matrix<double>::add(const Matrix<double>&, const Matrix<double>&);
+template Matrix<float> Matrix<float>::sub(const Matrix<float>&, const Matrix<float>&);
+template Matrix<double> Matrix<double>::sub(const Matrix<double>&, const Matrix<double>&);
 
 // Explicit instantiations for basic methods
 template Matrix<float>::Matrix(size_t rows, size_t cols);

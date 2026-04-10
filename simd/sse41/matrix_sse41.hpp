@@ -6,3 +6,6 @@ double sse_dot_double(const double* a_row, const double* b_data, size_t k, size_
 
 void sse_add_float(const float* a_data, const float* b_data, float* c_data, size_t total);
 void sse_add_double(const double* a_data, const double* b_data, double* c_data, size_t total);
+
+void sse_sub_float(const float* a_data, const float* b_data, float* c_data, size_t total);
+void sse_sub_double(const double* a_data, const double* b_data, double* c_data, size_t total);

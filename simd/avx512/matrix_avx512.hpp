@@ -6,3 +6,6 @@ double avx512_dot_double(const double* a_row, const double* b_data, size_t k, si
 
 void avx512_add_float(const float* a_data, const float* b_data, float* c_data, size_t total);
 void avx512_add_double(const double* a_data, const double* b_data, double* c_data, size_t total);
+
+void avx512_sub_float(const float* a_data, const float* b_data, float* c_data, size_t total);
+void avx512_sub_double(const double* a_data, const double* b_data, double* c_data, size_t total);

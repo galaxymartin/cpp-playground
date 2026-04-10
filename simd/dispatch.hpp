@@ -11,3 +11,6 @@ double simd_dot_double(const double* a_row, const double* b_data, size_t k, size
 
 void simd_add_float(const float* a_data, const float* b_data, float* c_data, size_t total, SimdLevel force = SimdLevel::AUTO);
 void simd_add_double(const double* a_data, const double* b_data, double* c_data, size_t total, SimdLevel force = SimdLevel::AUTO);
+
+void simd_sub_float(const float* a_data, const float* b_data, float* c_data, size_t total, SimdLevel force = SimdLevel::AUTO);
+void simd_sub_double(const double* a_data, const double* b_data, double* c_data, size_t total, SimdLevel force = SimdLevel::AUTO);

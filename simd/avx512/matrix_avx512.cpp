@@ -70,3 +70,31 @@ void avx512_add_double(const double* a_data, const double* b_data, double* c_dat
         }
     }
 }
+
+void avx512_sub_float(const float* a_data, const float* b_data, float* c_data, size_t total) {
+    #pragma omp parallel for
+    for (size_t i = 0; i < total; i += 16) {
+        if (i + 16 <= total) {
+            __m512 va = _mm512_loadu_ps(&a_data[i]);
+            __m512 vb = _mm512_loadu_ps(&b_data[i]);
+            __m512 vc = _mm512_sub_ps(va, vb);
+            _mm512_storeu_ps(&c_data[i], vc);
+        } else {
+            for (size_t j = i; j < total; ++j) c_data[j] = a_data[j] - b_data[j];
+        }
+    }
+}
+
+void avx512_sub_double(const double* a_data, const double* b_data, double* c_data, size_t total) {
+    #pragma omp parallel for
+    for (size_t i = 0; i < total; i += 8) {
+        if (i + 8 <= total) {
+            __m512d va = _mm512_loadu_pd(&a_data[i]);
+            __m512d vb = _mm512_loadu_pd(&b_data[i]);
+            __m512d vc = _mm512_sub_pd(va, vb);
+            _mm512_storeu_pd(&c_data[i], vc);
+        } else {
+            for (size_t j = i; j < total; ++j) c_data[j] = a_data[j] - b_data[j];
+        }
+    }
+}

@@ -726,3 +726,98 @@ TEST(MatrixDoubleTest, AddSSE42Consistency) {
     }
   }
 }
+
+// Tests for subtraction (minus)
+TEST(MatrixTest, SubBasic) {
+  Matrix<float> a({{5, 6}, {7, 8}});
+  Matrix<float> b({{1, 2}, {3, 4}});
+  Matrix<float> c = Matrix<float>::sub(a, b);
+
+  EXPECT_EQ(c.rows(), 2);
+  EXPECT_EQ(c.cols(), 2);
+  EXPECT_NEAR(c.at(0, 0), 4.0f, 1e-5f);  // 5 - 1
+  EXPECT_NEAR(c.at(0, 1), 4.0f, 1e-5f);  // 6 - 2
+  EXPECT_NEAR(c.at(1, 0), 4.0f, 1e-5f);  // 7 - 3
+  EXPECT_NEAR(c.at(1, 1), 4.0f, 1e-5f);  // 8 - 4
+}
+
+TEST(MatrixDoubleTest, SubBasic) {
+  Matrix<double> a({{5, 6}, {7, 8}});
+  Matrix<double> b({{1, 2}, {3, 4}});
+  Matrix<double> c = Matrix<double>::sub(a, b);
+
+  EXPECT_EQ(c.rows(), 2);
+  EXPECT_EQ(c.cols(), 2);
+  EXPECT_NEAR(c.at(0, 0), 4.0, 1e-10);
+  EXPECT_NEAR(c.at(0, 1), 4.0, 1e-10);
+  EXPECT_NEAR(c.at(1, 0), 4.0, 1e-10);
+  EXPECT_NEAR(c.at(1, 1), 4.0, 1e-10);
+}
+
+TEST(MatrixTest, SubDimensionMismatch) {
+  Matrix<float> a({{1, 2}, {3, 4}});
+  Matrix<float> b({{1, 2}, {3, 4}, {5, 6}});
+  EXPECT_THROW(Matrix<float>::sub(a, b), std::invalid_argument);
+}
+
+TEST(MatrixTest, SubWithNegatives) {
+  Matrix<float> a({{-1, -2}, {3, -4}});
+  Matrix<float> b({{1, -2}, {-3, 4}});
+  Matrix<float> c = a - b; // operator-
+
+  EXPECT_FLOAT_EQ(c.at(0,0), -2.0f); // -1 - 1
+  EXPECT_FLOAT_EQ(c.at(0,1), 0.0f);  // -2 - (-2)
+  EXPECT_FLOAT_EQ(c.at(1,0), 6.0f);  // 3 - (-3)
+  EXPECT_FLOAT_EQ(c.at(1,1), -8.0f); // -4 - 4
+}
+
+TEST(MatrixTest, SubScalarAndSSEConsistency) {
+  // Ensure scalar and SIMD subtraction paths match
+  Matrix<float> a(4,4);
+  Matrix<float> b(4,4);
+  for (size_t i=0;i<4;i++) for (size_t j=0;j<4;j++) {
+    a.at(i,j) = static_cast<float>(i*4 + j + 1);
+    b.at(i,j) = static_cast<float>((i*4 + j + 1) * 2);
+  }
+
+  Matrix<float>::setForceScalarSub(true);
+  Matrix<float> c_scalar = Matrix<float>::sub(a,b);
+  Matrix<float>::setForceScalarSub(false);
+
+  Matrix<float>::setForceSSE42Sub(true);
+  Matrix<float> c_sse = Matrix<float>::sub(a,b);
+  Matrix<float>::setForceSSE42Sub(false);
+
+  for (size_t i=0;i<c_scalar.rows();++i) for (size_t j=0;j<c_scalar.cols();++j)
+    EXPECT_FLOAT_EQ(c_scalar.at(i,j), c_sse.at(i,j));
+}
+
+TEST(MatrixTest, ChainedMultiplyAddFloat) {
+  Matrix<float> c({{1,2,3},{4,5,6}}); // 2x3
+  Matrix<float> b({{1,0},{0,1},{1,0}}); // 3x2
+  Matrix<float> d({{1,1},{1,1}}); // 2x2
+
+  Matrix<float> a = (c * b) + d;
+
+  EXPECT_EQ(a.rows(), 2);
+  EXPECT_EQ(a.cols(), 2);
+  EXPECT_FLOAT_EQ(a.at(0,0), 5.0f);  // 4 + 1
+  EXPECT_FLOAT_EQ(a.at(0,1), 3.0f);  // 2 + 1
+  EXPECT_FLOAT_EQ(a.at(1,0), 11.0f); // 10 + 1
+  EXPECT_FLOAT_EQ(a.at(1,1), 6.0f);  // 5 + 1
+}
+
+TEST(MatrixDoubleTest, ChainedMultiplyAddDouble) {
+  Matrix<double> c({{1,2,3},{4,5,6}}); // 2x3
+  Matrix<double> b({{1,0},{0,1},{1,0}}); // 3x2
+  Matrix<double> d({{1,1},{1,1}}); // 2x2
+
+  Matrix<double> a = (c * b) + d;
+
+  EXPECT_EQ(a.rows(), 2);
+  EXPECT_EQ(a.cols(), 2);
+  EXPECT_DOUBLE_EQ(a.at(0,0), 5.0);  // 4 + 1
+  EXPECT_DOUBLE_EQ(a.at(0,1), 3.0);  // 2 + 1
+  EXPECT_DOUBLE_EQ(a.at(1,0), 11.0); // 10 + 1
+  EXPECT_DOUBLE_EQ(a.at(1,1), 6.0);  // 5 + 1
+}

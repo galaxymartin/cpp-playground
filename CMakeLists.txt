@@ -35,6 +35,7 @@ find_package(ArrowCompute CONFIG QUIET)
 find_package(Parquet CONFIG QUIET)
 find_package(boost_json CONFIG QUIET)
 find_package(boost_asio CONFIG QUIET)
+find_package(boost_accumulators CONFIG QUIET)
 find_package(boost_program_options CONFIG QUIET)
 find_package(boost_headers CONFIG QUIET)
 find_package(boost_bind CONFIG QUIET)
@@ -63,9 +64,14 @@ target_link_libraries(tests PRIVATE
 gtest_discover_tests(tests)
 
 add_executable(cpp-playground main.cpp my_class.cpp printer.cpp matrix.cpp)
-target_link_libraries(cpp-playground PRIVATE simd)
-
-# Note: linking to Boost targets removed to allow building tests without external Boost
+target_link_libraries(cpp-playground PRIVATE
+    simd
+    GTest::gmock
+    $<$<BOOL:${boost_json_FOUND}>:Boost::json>
+    $<$<BOOL:${boost_asio_FOUND}>:Boost::asio>
+    $<$<BOOL:${boost_log_FOUND}>:Boost::log>
+    $<$<BOOL:${boost_accumulators_FOUND}>:Boost::accumulators>
+)
 
 if (Arrow_FOUND)
   add_executable(arrow_demo arrow_main.cpp)

@@ -41,6 +41,11 @@ if (NOT GTest_FOUND)
   )
   FetchContent_MakeAvailable(googletest)
 endif()
+
+# Pre-discover utf8proc so Arrow's finder doesn't fall back to deprecated
+# unofficial-utf8proc package names and emit a warning.
+find_package(utf8proc CONFIG QUIET)
+
 find_package(Arrow CONFIG QUIET)
 find_package(ArrowCompute CONFIG QUIET)
 find_package(Parquet CONFIG QUIET)

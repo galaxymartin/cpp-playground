@@ -1,0 +1,106 @@
+name: build
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  OWNER: ${{ github.repository_owner }}
+  FEED_URL: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+  VCPKG_USE_NUGET_CACHE: 1
+  VCPKG_NUGET_REPOSITORY: ${{ github.server_url }}/${{ github.repository }}.git
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    container:
+      image: fedora@sha256:f717d3f59ea0dc45d3c024c9477e786bab7d418d26636920d17b48016f1e69ca
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          dnf install -y \
+            cmake \
+            curl \
+            gcc-c++ \
+            git \
+            mold \
+            mono-core \
+            ninja-build \
+            pkgconf-pkg-config \
+            python3 \
+            tar \
+            unzip \
+            which \
+            zip
+          dnf clean all
+
+      - name: Checkout vcpkg
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/vcpkg
+          path: vcpkg
+
+      - name: Bootstrap vcpkg
+        run: ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: Select vcpkg binary cache mode
+        env:
+          PAT: ${{ secrets.VCPKG_PAT_TOKEN }}
+        run: |
+          if [[ -n "${PAT}" ]]; then
+            if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+              mode=read
+            else
+              mode=readwrite
+            fi
+
+            echo "VCPKG_BINARY_SOURCES=clear;nuget,${FEED_URL},${mode}" >> "${GITHUB_ENV}"
+          else
+            echo "VCPKG_BINARY_SOURCES=default,readwrite" >> "${GITHUB_ENV}"
+          fi
+
+      - name: Configure GitHub Packages source
+        env:
+          PAT: ${{ secrets.VCPKG_PAT_TOKEN }}
+        run: |
+          if [[ -z "${PAT}" ]]; then
+            echo "VCPKG_PAT_TOKEN is not set; using the default local vcpkg cache only."
+            exit 0
+          fi
+
+          mono "$(./vcpkg/vcpkg fetch nuget | tail -n 1)" \
+            sources remove \
+            -Name GitHubPackages || true
+
+          mono "$(./vcpkg/vcpkg fetch nuget | tail -n 1)" \
+            sources add \
+            -Source "${FEED_URL}" \
+            -StorePasswordInClearText \
+            -Name GitHubPackages \
+            -UserName "${OWNER}" \
+            -Password "${PAT}"
+
+          mono "$(./vcpkg/vcpkg fetch nuget | tail -n 1)" \
+            setapikey "${PAT}" \
+            -Source "${FEED_URL}"
+
+      - name: Configure
+        run: cmake --preset GCC-16.1-release
+
+      - name: Build
+        run: cmake --build build/GCC-16.1-release --parallel
+
+      - name: Test
+        run: ctest --test-dir build/GCC-16.1-release --output-on-failure

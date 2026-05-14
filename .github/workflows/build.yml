@@ -35,9 +35,11 @@ jobs:
             curl \
             gcc-c++ \
             git \
+            linux-headers \
             mold \
             mono-core \
             ninja-build \
+            perl-IPC-Run \
             pkgconf-pkg-config \
             python3 \
             tar \

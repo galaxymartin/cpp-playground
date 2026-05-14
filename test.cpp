@@ -1,7 +1,9 @@
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
 #include <algorithm>
 #include <type_traits>
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 #include "mock_turtle.hpp"
 #include "mock_worklist_adapter.hpp"
 #include "worklist_port.hpp"

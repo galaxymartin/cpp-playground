@@ -1,5 +1,6 @@
-#include <iostream>
 #include "printer.hpp"
+
+#include <iostream>
 
 printer::printer(boost::asio::io_context &io)
     : strand_(boost::asio::make_strand(io)),

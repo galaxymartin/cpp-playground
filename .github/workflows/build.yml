@@ -40,6 +40,7 @@ jobs:
             mono-core \
             ninja-build \
             perl-IPC-Run \
+            perl-IPC-Cmd \
             pkgconf-pkg-config \
             python3 \
             tar \

@@ -35,7 +35,7 @@ jobs:
             curl \
             gcc-c++ \
             git \
-            linux-headers \
+            kernel-headers \
             mold \
             mono-core \
             ninja-build \

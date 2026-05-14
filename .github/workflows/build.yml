@@ -104,3 +104,15 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build/GCC-16.1-release --output-on-failure
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpp-playground-fedora44-release
+          if-no-files-found: warn
+          path: |
+            build/GCC-16.1-release/cpp-playground
+            build/GCC-16.1-release/tests
+            build/GCC-16.1-release/arrow_demo
+            build/GCC-16.1-release/Testing/**

@@ -41,6 +41,10 @@ jobs:
             ninja-build \
             perl-IPC-Run \
             perl-IPC-Cmd \
+            perl-Time-Piece \
+            perl-File-Compare \
+            perl-File-Copy \
+            perl-FindBin \
             pkgconf-pkg-config \
             python3 \
             tar \

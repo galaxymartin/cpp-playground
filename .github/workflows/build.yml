@@ -17,6 +17,7 @@ env:
   VCPKG_ROOT: ${{ github.workspace }}/vcpkg
   VCPKG_USE_NUGET_CACHE: 1
   VCPKG_NUGET_REPOSITORY: ${{ github.server_url }}/${{ github.repository }}.git
+  VCPKG_DEFAULT_TRIPLET: x64-linux
 
 jobs:
   linux:
@@ -106,23 +107,21 @@ jobs:
             setapikey "${PAT}" \
             -Source "${FEED_URL}"
 
-      - name: Configure
-        run: cmake --preset GCC-16.1-debug
+      - name: Install vcpkg dependencies (populate binary cache)
+        run: |
+          ./vcpkg/vcpkg install --manifest --triplet ${VCPKG_DEFAULT_TRIPLET} --clean-after-build --recurse
 
-      - name: Build
-        run: cmake --build build/GCC-16.1-debug --parallel
+      - name: Cache vcpkg installed packages
+        uses: actions/cache@v4
+        with:
+          path: vcpkg/installed
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg/**') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
 
-      - name: Test
-        run: ctest --test-dir build/GCC-16.1-debug --output-on-failure
-
-      - name: Upload build artifacts
-        if: always()
+      - name: Upload vcpkg artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cpp-playground-fedora44-debug
-          if-no-files-found: warn
-          path: |
-            build/GCC-16.1-debug/cpp-playground
-            build/GCC-16.1-debug/tests
-            build/GCC-16.1-debug/arrow_demo
-            build/GCC-16.1-debug/Testing/**
+          name: vcpkg-archive
+          path: vcpkg
+

@@ -77,7 +77,8 @@ jobs:
               mode=readwrite
             fi
 
-            echo "VCPKG_BINARY_SOURCES=clear;nuget,${FEED_URL},${mode}" >> "${GITHUB_ENV}"
+            # Prefer GitHub Packages NuGet feed first, then fall back to the default (build from source)
+            echo "VCPKG_BINARY_SOURCES=nuget,${FEED_URL},${mode};default,readwrite" >> "${GITHUB_ENV}"
           else
             echo "VCPKG_BINARY_SOURCES=default,readwrite" >> "${GITHUB_ENV}"
           fi

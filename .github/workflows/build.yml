@@ -35,6 +35,8 @@ jobs:
             curl \
             gcc-c++ \
             git \
+            flex \
+            bison \
             kernel-headers \
             mold \
             mono-core \

@@ -6,8 +6,12 @@
             "hidden": true,
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "environment": {
+                "VCPKG_ROOT": "$penv{HOME}/.local/share/vcpkg"
+            },
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_EXECUTABLE": "$env{VCPKG_ROOT}/vcpkg"
             }
         },
         {

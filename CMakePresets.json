@@ -10,8 +10,7 @@
                 "VCPKG_ROOT": "$penv{HOME}/.local/share/vcpkg"
             },
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "VCPKG_EXECUTABLE": "$env{VCPKG_ROOT}/vcpkg"
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
             }
         },
         {

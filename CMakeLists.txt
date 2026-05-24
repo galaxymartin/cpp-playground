@@ -23,8 +23,19 @@ if(ENABLE_ADDRESS_SANITIZER)
   list(APPEND PROJECT_COMPILE_OPTIONS -fsanitize=address -fno-omit-frame-pointer -g -O1)
   list(APPEND PROJECT_LINK_OPTIONS -fsanitize=address)
 else()
-  list(APPEND PROJECT_COMPILE_OPTIONS -O3 -s -fdata-sections -ffunction-sections)
-  list(APPEND PROJECT_LINK_OPTIONS -Wl,--gc-sections -Wl,--strip-all)
+  # Keep symbols and minimal optimization in Debug so source breakpoints bind reliably.
+  list(APPEND PROJECT_COMPILE_OPTIONS
+    $<$<CONFIG:Debug>:-O0>
+    $<$<CONFIG:Debug>:-g3>
+    $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
+    $<$<NOT:$<CONFIG:Debug>>:-O3>
+    $<$<NOT:$<CONFIG:Debug>>:-fdata-sections>
+    $<$<NOT:$<CONFIG:Debug>>:-ffunction-sections>
+  )
+  list(APPEND PROJECT_LINK_OPTIONS
+    $<$<NOT:$<CONFIG:Debug>>:-Wl,--gc-sections>
+    $<$<NOT:$<CONFIG:Debug>>:-Wl,--strip-all>
+  )
 endif()
 
 function(apply_project_options target_name)

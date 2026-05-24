@@ -27,6 +27,26 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb"
+        },     
+        {
+            "name": "Debug tests (prompt filter)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/GCC-16.1-debug/tests",
+            "args": ["--gtest_filter=${input:gtestFilter}"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "gtestFilter",
+            "type": "promptString",
+            "description": "GoogleTest filter (example: MatrixTest.Multiply or MatrixTest.*)",
+            "default": "*"
         }
     ]
 }

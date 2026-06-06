@@ -1,7 +1,7 @@
 {
   "name": "cpp-playground",
   "version": "1.0.1",
-  "builtin-baseline": "38d91be5efb2f21fbef4a3c53295002823747431",
+  "builtin-baseline": "d015e31e90838a4c9dfa3eed45979bc70d9357fc",
   "dependencies": [
     {
       "name": "arrow",

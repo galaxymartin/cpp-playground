@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 4.3)
+
+# Use workspace-local vcpkg overlay ports to patch dependency build quirks.
+set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/vcpkg-overlay-ports")
+
 project(cpp-playground VERSION 0.1.0 LANGUAGES CXX)
 
 include(CTest)
